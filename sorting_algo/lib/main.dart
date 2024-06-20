@@ -76,6 +76,8 @@ class _SortingVisualizerScreenState extends State<SortingVisualizerScreen> {
   String _selectedAlgorithm = 'Bubble Sort';
   int _iterations = 0;
   Timer? _timer;
+  int _currentIndex = -1;
+  int _nextIndex = -1;
 
   @override
   void dispose() {
@@ -87,10 +89,17 @@ class _SortingVisualizerScreenState extends State<SortingVisualizerScreen> {
     setState(() {
       _array = List<int>.generate(10, (_) => Random().nextInt(100));
       _iterations = 0;
+      _currentIndex = -1;
+      _nextIndex = -1;
+      _timer?.cancel();
     });
   }
 
   void _startSorting() {
+    _timer?.cancel();
+    setState(() {
+      _iterations = 0;
+    });
     switch (_selectedAlgorithm) {
       case 'Bubble Sort':
         _bubbleSort();
@@ -107,6 +116,10 @@ class _SortingVisualizerScreenState extends State<SortingVisualizerScreen> {
     }
   }
 
+  void _stopSorting() {
+    _timer?.cancel();
+  }
+
   void _bubbleSort() {
     int n = _array.length;
     int i = 0;
@@ -115,6 +128,8 @@ class _SortingVisualizerScreenState extends State<SortingVisualizerScreen> {
       setState(() {
         if (i < n) {
           if (j < n - i - 1) {
+            _currentIndex = j;
+            _nextIndex = j + 1;
             if (_array[j] > _array[j + 1]) {
               int temp = _array[j];
               _array[j] = _array[j + 1];
@@ -142,6 +157,8 @@ class _SortingVisualizerScreenState extends State<SortingVisualizerScreen> {
       setState(() {
         if (i < n - 1) {
           if (j < n) {
+            _currentIndex = i;
+            _nextIndex = j;
             if (_array[j] < _array[minIndex]) {
               minIndex = j;
             }
@@ -170,6 +187,8 @@ class _SortingVisualizerScreenState extends State<SortingVisualizerScreen> {
     _timer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
         if (i < n) {
+          _currentIndex = j;
+          _nextIndex = j - 1;
           if (j > 0 && _array[j - 1] > key) {
             _array[j] = _array[j - 1];
             j--;
@@ -200,17 +219,27 @@ class _SortingVisualizerScreenState extends State<SortingVisualizerScreen> {
   int _partition(int low, int high) {
     int pivot = _array[high];
     int i = (low - 1);
-    for (int j = low; j <= high - 1; j++) {
-      if (_array[j] < pivot) {
-        i++;
-        int temp = _array[i];
-        _array[i] = _array[j];
-        _array[j] = temp;
-      }
-    }
-    int temp = _array[i + 1];
-    _array[i + 1] = _array[high];
-    _array[high] = temp;
+    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (low <= high - 1) {
+          _currentIndex = low;
+          _nextIndex = high;
+          if (_array[low] < pivot) {
+            i++;
+            int temp = _array[i];
+            _array[i] = _array[low];
+            _array[low] = temp;
+          }
+          low++;
+          _iterations++;
+        } else {
+          int temp = _array[i + 1];
+          _array[i + 1] = _array[high];
+          _array[high] = temp;
+          timer.cancel();
+        }
+      });
+    });
     return (i + 1);
   }
 
@@ -231,6 +260,7 @@ class _SortingVisualizerScreenState extends State<SortingVisualizerScreen> {
                   onChanged: (String? newValue) {
                     setState(() {
                       _selectedAlgorithm = newValue!;
+                      _iterations = 0; // Reset iterations on algorithm change
                     });
                   },
                   items: <String>[
@@ -255,36 +285,49 @@ class _SortingVisualizerScreenState extends State<SortingVisualizerScreen> {
                   onPressed: _shuffleArray,
                   child: Text('Shuffle Array'),
                 ),
+                SizedBox(width: 10),
+                ElevatedButton(
+                  onPressed: _stopSorting,
+                  child: Text('Stop Sorting'),
+                ),
               ],
             ),
             SizedBox(height: 20),
+            Text('Iterations: $_iterations'),
             Row(
               children: [
                 Column(
                   children: _array
-                      .map((value) => Container(
-                            width: 50,
-                            height: 50,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.black),
+                      .asMap()
+                      .map((index, value) => MapEntry(
+                            index,
+                            Container(
+                              width: 50,
+                              height: 50,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: index == _currentIndex ||
+                                        index == _nextIndex
+                                    ? Colors.yellow
+                                    : Colors.white,
+                                border: Border.all(color: Colors.black),
+                              ),
+                              child: Text(value.toString()),
                             ),
-                            child: Text(value.toString()),
                           ))
+                      .values
                       .toList(),
                 ),
                 SizedBox(width: 10),
                 Column(
-                  children: List.generate(
-                      10,
-                      (index) => Container(
-                            width: 50,
-                            height: 50,
-                            alignment: Alignment.center,
-                            child: Text(index < _iterations
-                                ? (_iterations - index).toString()
-                                : ''),
-                          )),
+                  children: [
+                    Container(
+                      width: 50,
+                      height: 50,
+                      alignment: Alignment.center,
+                      child: Text('$_iterations'),
+                    ),
+                  ],
                 )
               ],
             ),
