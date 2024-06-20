@@ -189,7 +189,7 @@ class _MainUIState extends State<MainUI> {
   void resetIteration(String? newValue) {
     setState(() {
       _selectedAlgorithm = newValue!;
-      _iterations = 0; // Reset iterations on algorithm change
+      _iterations = 0;
     });
   }
 
