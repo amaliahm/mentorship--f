@@ -1,7 +1,5 @@
-import 'dart:async';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:sorting_algo/HomeScreen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,12 +11,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Sorting Algorithms',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color.fromARGB(255, 40, 179, 160)),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Sorting Algorithms'),
     );
   }
 }
@@ -33,307 +32,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-          title: Text(widget.title),
-        ),
-        body: SortingVisualizerScreen());
+    return Scaffold(appBar: appBar(context, widget.title), body: MainUI());
   }
 }
 
-class SortingVisualizerApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Sorting Visualizer',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: SortingVisualizerScreen(),
-    );
-  }
-}
-
-class SortingVisualizerScreen extends StatefulWidget {
-  @override
-  _SortingVisualizerScreenState createState() =>
-      _SortingVisualizerScreenState();
-}
-
-class _SortingVisualizerScreenState extends State<SortingVisualizerScreen> {
-  List<int> _array = List<int>.generate(10, (_) => Random().nextInt(100));
-  String _selectedAlgorithm = 'Bubble Sort';
-  int _iterations = 0;
-  Timer? _timer;
-  int _currentIndex = -1;
-  int _nextIndex = -1;
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _shuffleArray() {
-    setState(() {
-      _array = List<int>.generate(10, (_) => Random().nextInt(100));
-      _iterations = 0;
-      _currentIndex = -1;
-      _nextIndex = -1;
-      _timer?.cancel();
-    });
-  }
-
-  void _startSorting() {
-    _timer?.cancel();
-    setState(() {
-      _iterations = 0;
-    });
-    switch (_selectedAlgorithm) {
-      case 'Bubble Sort':
-        _bubbleSort();
-        break;
-      case 'Selection Sort':
-        _selectionSort();
-        break;
-      case 'Insertion Sort':
-        _insertionSort();
-        break;
-      case 'Quick Sort':
-        _quickSort(0, _array.length - 1);
-        break;
-    }
-  }
-
-  void _stopSorting() {
-    _timer?.cancel();
-  }
-
-  void _bubbleSort() {
-    int n = _array.length;
-    int i = 0;
-    int j = 0;
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        if (i < n) {
-          if (j < n - i - 1) {
-            _currentIndex = j;
-            _nextIndex = j + 1;
-            if (_array[j] > _array[j + 1]) {
-              int temp = _array[j];
-              _array[j] = _array[j + 1];
-              _array[j + 1] = temp;
-            }
-            j++;
-            _iterations++;
-          } else {
-            j = 0;
-            i++;
-          }
-        } else {
-          timer.cancel();
-        }
-      });
-    });
-  }
-
-  void _selectionSort() {
-    int n = _array.length;
-    int i = 0;
-    int j = 0;
-    int minIndex = 0;
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        if (i < n - 1) {
-          if (j < n) {
-            _currentIndex = i;
-            _nextIndex = j;
-            if (_array[j] < _array[minIndex]) {
-              minIndex = j;
-            }
-            j++;
-            _iterations++;
-          } else {
-            int temp = _array[minIndex];
-            _array[minIndex] = _array[i];
-            _array[i] = temp;
-            i++;
-            j = i + 1;
-            minIndex = i;
-          }
-        } else {
-          timer.cancel();
-        }
-      });
-    });
-  }
-
-  void _insertionSort() {
-    int n = _array.length;
-    int i = 1;
-    int j = 1;
-    int key = _array[1];
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        if (i < n) {
-          _currentIndex = j;
-          _nextIndex = j - 1;
-          if (j > 0 && _array[j - 1] > key) {
-            _array[j] = _array[j - 1];
-            j--;
-            _iterations++;
-          } else {
-            _array[j] = key;
-            i++;
-            if (i < n) {
-              j = i;
-              key = _array[i];
-            }
-          }
-        } else {
-          timer.cancel();
-        }
-      });
-    });
-  }
-
-  void _quickSort(int low, int high) {
-    if (low < high) {
-      int pi = _partition(low, high);
-      _quickSort(low, pi - 1);
-      _quickSort(pi + 1, high);
-    }
-  }
-
-  int _partition(int low, int high) {
-    int pivot = _array[high];
-    int i = (low - 1);
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
-      setState(() {
-        if (low <= high - 1) {
-          _currentIndex = low;
-          _nextIndex = high;
-          if (_array[low] < pivot) {
-            i++;
-            int temp = _array[i];
-            _array[i] = _array[low];
-            _array[low] = temp;
-          }
-          low++;
-          _iterations++;
-        } else {
-          int temp = _array[i + 1];
-          _array[i + 1] = _array[high];
-          _array[high] = temp;
-          timer.cancel();
-        }
-      });
-    });
-    return (i + 1);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Sorting Visualizer'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                DropdownButton<String>(
-                  value: _selectedAlgorithm,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedAlgorithm = newValue!;
-                      _iterations = 0; // Reset iterations on algorithm change
-                    });
-                  },
-                  items: <String>[
-                    'Bubble Sort',
-                    'Selection Sort',
-                    'Insertion Sort',
-                    'Quick Sort'
-                  ].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _startSorting,
-                  child: Text('Start Sorting'),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _shuffleArray,
-                  child: Text('Shuffle Array'),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _stopSorting,
-                  child: Text('Stop Sorting'),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Text('Iterations: $_iterations'),
-            Row(
-              children: [
-                Column(
-                  children: _array
-                      .asMap()
-                      .map((index, value) => MapEntry(
-                            index,
-                            Container(
-                              width: 50,
-                              height: 50,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: index == _currentIndex ||
-                                        index == _nextIndex
-                                    ? Colors.yellow
-                                    : Colors.white,
-                                border: Border.all(color: Colors.black),
-                              ),
-                              child: Text(value.toString()),
-                            ),
-                          ))
-                      .values
-                      .toList(),
-                ),
-                SizedBox(width: 10),
-                Column(
-                  children: [
-                    Container(
-                      width: 50,
-                      height: 50,
-                      alignment: Alignment.center,
-                      child: Text('$_iterations'),
-                    ),
-                  ],
-                )
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+AppBar appBar(BuildContext context, String title) {
+  return AppBar(
+    backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+    title: Text(title),
+  );
 }
