@@ -1,3 +1,5 @@
+// ignore_for_file: file_names, use_key_in_widget_constructors, library_private_types_in_public_api
+
 import 'dart:async';
 import 'dart:math';
 
@@ -61,7 +63,7 @@ class _MainUIState extends State<MainUI> {
     int n = _array.length;
     int i = 0;
     int j = 0;
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (i < n) {
           if (j < n - i - 1) {
@@ -90,7 +92,7 @@ class _MainUIState extends State<MainUI> {
     int i = 0;
     int j = 0;
     int minIndex = 0;
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (i < n - 1) {
           if (j < n) {
@@ -121,28 +123,32 @@ class _MainUIState extends State<MainUI> {
     int i = 1;
     int j = 1;
     int key = _array[1];
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (i < n) {
-          _currentIndex = j;
-          _nextIndex = j - 1;
-          if (j > 0 && _array[j - 1] > key) {
-            _array[j] = _array[j - 1];
-            j--;
-            _iterations++;
-          } else {
-            _array[j] = key;
-            i++;
-            if (i < n) {
-              j = i;
-              key = _array[i];
-            }
-          }
+          _stillIterations(i, j, key, n);
         } else {
           timer.cancel();
         }
       });
     });
+  }
+
+  void _stillIterations(int i, int j, int key, int n) {
+    _currentIndex = j;
+    _nextIndex = j - 1;
+    if (j > 0 && _array[j - 1] > key) {
+      _array[j] = _array[j - 1];
+      j--;
+      _iterations++;
+    } else {
+      _array[j] = key;
+      i++;
+      if (i < n) {
+        j = i;
+        key = _array[i];
+      }
+    }
   }
 
   void _quickSort(int low, int high) {
@@ -156,7 +162,7 @@ class _MainUIState extends State<MainUI> {
   int _partition(int low, int high) {
     int pivot = _array[high];
     int i = (low - 1);
-    _timer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (low <= high - 1) {
           _currentIndex = low;
@@ -180,97 +186,95 @@ class _MainUIState extends State<MainUI> {
     return (i + 1);
   }
 
+  void resetIteration(String? newValue) {
+    setState(() {
+      _selectedAlgorithm = newValue!;
+      _iterations = 0; // Reset iterations on algorithm change
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Sorting Visualizer'),
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: _buttonsPart(),
+          ),
+          const SizedBox(height: 20),
+          Text('Iterations: $_iterations'),
+          _arrayPart(),
+        ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                DropdownButton<String>(
-                  value: _selectedAlgorithm,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _selectedAlgorithm = newValue!;
-                      _iterations = 0; // Reset iterations on algorithm change
-                    });
-                  },
-                  items: <String>[
-                    'Bubble Sort',
-                    'Selection Sort',
-                    'Insertion Sort',
-                    'Quick Sort'
-                  ].map<DropdownMenuItem<String>>((String value) {
-                    return DropdownMenuItem<String>(
-                      value: value,
-                      child: Text(value),
-                    );
-                  }).toList(),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _startSorting,
-                  child: Text('Start Sorting'),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _shuffleArray,
-                  child: Text('Shuffle Array'),
-                ),
-                SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: _stopSorting,
-                  child: Text('Stop Sorting'),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-            Text('Iterations: $_iterations'),
-            Row(
-              children: [
-                Column(
-                  children: _array
-                      .asMap()
-                      .map((index, value) => MapEntry(
-                            index,
-                            Container(
-                              width: 50,
-                              height: 50,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: index == _currentIndex ||
-                                        index == _nextIndex
-                                    ? Colors.yellow
-                                    : Colors.white,
-                                border: Border.all(color: Colors.black),
-                              ),
-                              child: Text(value.toString()),
-                            ),
-                          ))
-                      .values
-                      .toList(),
-                ),
-                SizedBox(width: 10),
-                Column(
-                  children: [
+    );
+  }
+
+  Row _buttonsPart() {
+    return Row(
+      children: [
+        DropdownButton<String>(
+          value: _selectedAlgorithm,
+          onChanged: (String? newValue) {
+            resetIteration(newValue);
+          },
+          items: <String>[
+            'Bubble Sort',
+            'Selection Sort',
+            'Insertion Sort',
+            'Quick Sort'
+          ].map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(value),
+            );
+          }).toList(),
+        ),
+        const SizedBox(width: 10),
+        ElevatedButton(
+          onPressed: _startSorting,
+          child: const Text('Start Sorting'),
+        ),
+        const SizedBox(width: 10),
+        ElevatedButton(
+          onPressed: _shuffleArray,
+          child: const Text('Shuffle Array'),
+        ),
+        const SizedBox(width: 10),
+        ElevatedButton(
+          onPressed: _stopSorting,
+          child: const Text('Stop Sorting'),
+        ),
+      ],
+    );
+  }
+
+  Row _arrayPart() {
+    return Row(
+      children: [
+        Column(
+          children: _array
+              .asMap()
+              .map((index, value) => MapEntry(
+                    index,
                     Container(
                       width: 50,
                       height: 50,
                       alignment: Alignment.center,
-                      child: Text('$_iterations'),
+                      decoration: BoxDecoration(
+                        color: index == _currentIndex || index == _nextIndex
+                            ? Colors.yellow
+                            : Colors.white,
+                        border: Border.all(color: Colors.black),
+                      ),
+                      child: Text(value.toString()),
                     ),
-                  ],
-                )
-              ],
-            ),
-          ],
+                  ))
+              .values
+              .toList(),
         ),
-      ),
+      ],
     );
   }
 }
