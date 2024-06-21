@@ -1,4 +1,4 @@
-// ignore_for_file: file_names, use_key_in_widget_constructors, library_private_types_in_public_api
+// ignore_for_file: use_key_in_widget_constructors, library_private_types_in_public_api, curly_braces_in_flow_control_structures
 
 import 'dart:async';
 import 'dart:math';
@@ -46,11 +46,11 @@ class _MainUIState extends State<MainUI> {
       case 'Selection Sort':
         _selectionSort();
         break;
-      case 'Insertion Sort':
-        _insertionSort();
+      case 'Heap Sort':
+        _heapSort();
         break;
-      case 'Quick Sort':
-        _quickSort(0, _array.length - 1);
+      case 'Shell Sort':
+        _shellSort();
         break;
     }
   }
@@ -118,72 +118,59 @@ class _MainUIState extends State<MainUI> {
     });
   }
 
-  void _insertionSort() {
+  void _heapSort() {
     int n = _array.length;
-    int i = 1;
-    int j = 1;
-    int key = _array[1];
+
+    for (int i = n ~/ 2 - 1; i >= 0; i--) _heapify(n, i);
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
-        if (i < n) {
-          _stillIterations(i, j, key, n);
+        if (n > 1) {
+          int temp = _array[0];
+          _array[0] = _array[n - 1];
+          _array[n - 1] = temp;
+
+          n--;
+          _heapify(n, 0);
         } else {
           timer.cancel();
         }
+        _iterations++;
       });
     });
   }
 
-  void _stillIterations(int i, int j, int key, int n) {
-    _currentIndex = j;
-    _nextIndex = j - 1;
-    if (j > 0 && _array[j - 1] > key) {
-      _array[j] = _array[j - 1];
-      j--;
-      _iterations++;
-    } else {
-      _array[j] = key;
-      i++;
-      if (i < n) {
-        j = i;
-        key = _array[i];
+  void _heapify(int n, int i) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < n && _array[left] > _array[largest]) largest = left;
+
+    if (right < n && _array[right] > _array[largest]) largest = right;
+
+    if (largest != i) {
+      int swap = _array[i];
+      _array[i] = _array[largest];
+      _array[largest] = swap;
+
+      _heapify(n, largest);
+    }
+  }
+
+  void _shellSort() {
+    int n = _array.length;
+    for (int gap = n ~/ 2; gap > 0; gap ~/= 2) {
+      for (int i = gap; i < n; i++) {
+        int temp = _array[i];
+        int j;
+        for (j = i; j >= gap && _array[j - gap] > temp; j -= gap) {
+          _array[j] = _array[j - gap];
+          _iterations++;
+        }
+        _array[j] = temp;
       }
     }
-  }
-
-  void _quickSort(int low, int high) {
-    if (low < high) {
-      int pi = _partition(low, high);
-      _quickSort(low, pi - 1);
-      _quickSort(pi + 1, high);
-    }
-  }
-
-  int _partition(int low, int high) {
-    int pivot = _array[high];
-    int i = (low - 1);
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (low <= high - 1) {
-          _currentIndex = low;
-          _nextIndex = high;
-          if (_array[low] < pivot) {
-            i++;
-            int temp = _array[i];
-            _array[i] = _array[low];
-            _array[low] = temp;
-          }
-          low++;
-          _iterations++;
-        } else {
-          int temp = _array[i + 1];
-          _array[i + 1] = _array[high];
-          _array[high] = temp;
-          timer.cancel();
-        }
-      });
-    });
-    return (i + 1);
   }
 
   void resetIteration(String? newValue) {
@@ -222,8 +209,8 @@ class _MainUIState extends State<MainUI> {
           items: <String>[
             'Bubble Sort',
             'Selection Sort',
-            'Insertion Sort',
-            'Quick Sort'
+            'Heap Sort',
+            'Shell Sort',
           ].map<DropdownMenuItem<String>>((String value) {
             return DropdownMenuItem<String>(
               value: value,
@@ -264,7 +251,7 @@ class _MainUIState extends State<MainUI> {
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
                         color: index == _currentIndex || index == _nextIndex
-                            ? Colors.yellow
+                            ? const Color.fromARGB(255, 87, 153, 240)
                             : Colors.white,
                         border: Border.all(color: Colors.black),
                       ),
